@@ -1,0 +1,10 @@
+# Blueprint de Render: New -> Blueprint -> seleccionar este repo
+services:
+  - type: web
+    name: churn-mcp-demo
+    runtime: docker
+    plan: free
+    rootDir: demo-advanced/ml-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true

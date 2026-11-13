@@ -1,0 +1,26 @@
+### Healthcheck
+GET http://localhost:8000/health
+
+### Root (lista las tools MCP)
+GET http://localhost:8000/
+
+### Customer by email - Laura
+GET http://localhost:8000/customer/by-email?email=laura.gomez@demo.com
+
+### Customer by email - Ana
+GET http://localhost:8000/customer/by-email?email=ana.premium@demo.com
+
+### Payment history - Pedro (en cobranza)
+GET http://localhost:8000/payment_history?email=pedro.moroso@demo.com
+
+### Predict churn - Laura
+POST http://localhost:8000/predict_churn
+Content-Type: application/json
+
+{ "email": "laura.gomez@demo.com" }
+
+### Support history - Carlos
+GET http://localhost:8000/support_history?email=carlos.toxico@demo.com
+
+# Las tools MCP (/mcp/) usan streamable HTTP con sesion: pruebalas con
+#   python test_mcp.py

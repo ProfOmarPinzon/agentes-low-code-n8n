@@ -1,0 +1,9 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Artefactos del modelo: se generan en el build (python train_churn.py)
+churn_model.pkl
+training_report.json

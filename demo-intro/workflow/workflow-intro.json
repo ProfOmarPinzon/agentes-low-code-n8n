@@ -1,0 +1,430 @@
+{
+  "name": "P0 - Automatización: servicio de clima",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b9cd1b6f-134e-4654-ab92-64913038c67a",
+      "name": "Ejecutar manualmente"
+    },
+    {
+      "parameters": {
+        "path": "clima",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "id": "8358e2a1-f05b-42b8-8bae-a91a388f4f46",
+      "name": "Webhook GET /clima",
+      "webhookId": "e33faa49-79da-4c8c-9c6c-e68f72151c1c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0c0e5599-b627-42a1-802a-95af2ee30927",
+              "name": "ciudad",
+              "value": "={{ $json.query?.ciudad ?? 'Bogota' }}",
+              "type": "string"
+            },
+            {
+              "id": "4f3d9099-b9fa-430e-889c-eeebea608ae4",
+              "name": "umbral_lluvia",
+              "value": "50",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        100
+      ],
+      "id": "ee8bb818-1e87-40a0-acc2-ca71f775c667",
+      "name": "Parámetros"
+    },
+    {
+      "parameters": {
+        "url": "=https://geocoding-api.open-meteo.com/v1/search?name={{ encodeURIComponent($json.ciudad) }}&count=1&language=es&format=json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        100
+      ],
+      "id": "675f88c9-9f85-443e-9d51-cd0fc14f04e0",
+      "name": "Geocodificar ciudad"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aebf26d1-a3fe-4b51-bd7c-23c9f01ed799",
+              "leftValue": "={{ ($json.results || []).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        100
+      ],
+      "id": "46d69db9-5f12-4e03-b046-5045ea4430a7",
+      "name": "¿Ciudad encontrada?"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.open-meteo.com/v1/forecast?latitude={{ $json.results[0].latitude }}&longitude={{ $json.results[0].longitude }}&current=temperature_2m,wind_speed_10m&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "69e48704-1133-4731-8eaf-ebeaa726ca69",
+      "name": "Consultar clima"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Ciudad no encontrada\", \"ciudad\": $('Parámetros').first().json.ciudad } }}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        220
+      ],
+      "id": "311528c7-47c8-4556-90f1-8f5cccb3354e",
+      "name": "Responder 404"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3bff365e-715a-4743-b978-d6ebe2ae9b4f",
+              "name": "ciudad",
+              "value": "={{ $('Geocodificar ciudad').first().json.results[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "51427f48-5dc4-48a5-8d2c-94dfbe09c9ca",
+              "name": "pais",
+              "value": "={{ $('Geocodificar ciudad').first().json.results[0].country }}",
+              "type": "string"
+            },
+            {
+              "id": "b8da5a74-3b30-4d8c-bf0e-bed9d4162868",
+              "name": "temperatura_actual_c",
+              "value": "={{ $json.current.temperature_2m }}",
+              "type": "number"
+            },
+            {
+              "id": "92e02910-0e61-4835-a994-681c7ddbe139",
+              "name": "temperatura_max_c",
+              "value": "={{ $json.daily.temperature_2m_max[0] }}",
+              "type": "number"
+            },
+            {
+              "id": "d12f656f-0b87-4676-a95a-cf3eb233b2bd",
+              "name": "temperatura_min_c",
+              "value": "={{ $json.daily.temperature_2m_min[0] }}",
+              "type": "number"
+            },
+            {
+              "id": "12b1500a-b9a7-4252-8abe-5c70abf6a0f4",
+              "name": "prob_lluvia_pct",
+              "value": "={{ $json.daily.precipitation_probability_max[0] }}",
+              "type": "number"
+            },
+            {
+              "id": "203eafa6-54c0-4875-8bb5-e85bd85784b3",
+              "name": "viento_kmh",
+              "value": "={{ $json.current.wind_speed_10m }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "4cbaced3-549c-4b6f-8d2c-ecd603d8fd19",
+      "name": "Extraer datos"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "61cb197e-5de0-4692-b1f0-0af6f31353f7",
+              "leftValue": "={{ $json.prob_lluvia_pct }}",
+              "rightValue": "={{ $('Parámetros').first().json.umbral_lluvia }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        0
+      ],
+      "id": "a267c418-c82f-42e8-beb4-d74353e53e72",
+      "name": "¿Va a llover?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6e77f16e-9f8e-4c26-b04c-3ea2efdc2781",
+              "name": "mensaje",
+              "value": "=En {{ $json.ciudad }} hay {{ $json.prob_lluvia_pct }}% de probabilidad de lluvia hoy. Lleva paraguas. Ahora: {{ $json.temperatura_actual_c }} °C.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        -100
+      ],
+      "id": "45354478-6e0b-4dc0-b77b-1ff031fc4569",
+      "name": "Mensaje: lleva paraguas"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "34e7cb4c-7b8c-424c-ac62-61217c4d52dd",
+              "name": "mensaje",
+              "value": "=En {{ $json.ciudad }} la probabilidad de lluvia es baja ({{ $json.prob_lluvia_pct }}%). Ahora: {{ $json.temperatura_actual_c }} °C, máxima {{ $json.temperatura_max_c }} °C.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        100
+      ],
+      "id": "14657bae-0cf8-4106-bc95-0280047c40f2",
+      "name": "Mensaje: día seco"
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        0
+      ],
+      "id": "fb293ccc-eea7-4a0d-bffc-02b8a176a813",
+      "name": "Responder JSON"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Ejecutar manualmente": {
+      "main": [
+        [
+          {
+            "node": "Parámetros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook GET /clima": {
+      "main": [
+        [
+          {
+            "node": "Parámetros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parámetros": {
+      "main": [
+        [
+          {
+            "node": "Geocodificar ciudad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Geocodificar ciudad": {
+      "main": [
+        [
+          {
+            "node": "¿Ciudad encontrada?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Ciudad encontrada?": {
+      "main": [
+        [
+          {
+            "node": "Consultar clima",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 404",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar clima": {
+      "main": [
+        [
+          {
+            "node": "Extraer datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer datos": {
+      "main": [
+        [
+          {
+            "node": "¿Va a llover?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Va a llover?": {
+      "main": [
+        [
+          {
+            "node": "Mensaje: lleva paraguas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensaje: día seco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensaje: lleva paraguas": {
+      "main": [
+        [
+          {
+            "node": "Responder JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensaje: día seco": {
+      "main": [
+        [
+          {
+            "node": "Responder JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {},
+  "tags": []
+}
