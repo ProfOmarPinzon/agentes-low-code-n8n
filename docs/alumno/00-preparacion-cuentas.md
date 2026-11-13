@@ -8,6 +8,7 @@ Este procedimiento se completa **antes de la primera sesión**. Todos los servic
 | Groq | Modelos de lenguaje gratuitos | P1, P2 (modalidad gratuita) | Gratuito, con límites de uso |
 | DeepSeek | Modelos de lenguaje de pago | P1, P2 (modalidad de pago, opcional) | Pago por uso |
 | GitHub y Render | Publicación del servicio de ML de la P2 | Solo P2, si se despliega un servicio propio | Gratuito |
+| VS Code con PlatformIO IDE | Firmware del StickS3 | Solo P3, si se usa el dispositivo físico | Gratuito |
 
 **Nota:** la P0 no utiliza inteligencia artificial; para ella solo se requiere n8n.
 
@@ -71,6 +72,18 @@ El servicio de ML que utiliza la P2 ya está publicado por el profesor. Estas cu
 2. Ingresar a **https://dashboard.render.com** con **Sign in with GitHub** y crear un *workspace* (plan Free, sin tarjeta).
 
 El procedimiento de despliegue se encuentra en el [apéndice de la Práctica 2](03-practica-2-agentes-avanzado.md#apéndice-despliegue-de-un-servicio-propio-en-render).
+
+---
+
+## 5. PlatformIO (solo P3 con dispositivo, opcional)
+
+La P3 puede realizarse con el simulador, sin hardware. Para cargar el firmware en un StickS3:
+
+1. Instalar **Visual Studio Code** desde **https://code.visualstudio.com**.
+2. En VS Code, abrir **Extensions** (barra lateral), buscar **PlatformIO IDE** e instalarla.
+3. Esperar a que la extensión termine de instalar su núcleo (aviso en la esquina inferior derecha) y reiniciar VS Code.
+4. Instalar **uv** (ejecuta el puente USB de la P3 e instala `pyserial`): en macOS, `brew install uv`, o seguir **https://docs.astral.sh/uv/getting-started/installation/**.
+5. Conseguir un cable USB-C **de datos**: el StickS3 se comunica con el computador por ese cable, sin WiFi.
 
 ---
 

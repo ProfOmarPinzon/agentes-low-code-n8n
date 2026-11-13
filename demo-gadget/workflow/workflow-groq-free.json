@@ -1,0 +1,349 @@
+{
+  "name": "P3 - Agente gadget: ambiente (Groq gratis)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ambiente",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6f176866-e47e-42bd-9337-04f9b11f9783",
+      "name": "Webhook POST /ambiente",
+      "webhookId": "16a89c0f-9c92-4953-832b-a419663f67cb"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eba83a29-2893-46dc-aaeb-6d9e40c7fc9a",
+              "name": "dispositivo",
+              "value": "={{ $json.body.dispositivo ?? $json.body.device ?? 'simulador' }}",
+              "type": "string"
+            },
+            {
+              "id": "9d2a9de6-07e1-49ff-96dd-d5fd30ec20f3",
+              "name": "ciudad",
+              "value": "={{ $json.body.ciudad ?? 'Bogota' }}",
+              "type": "string"
+            },
+            {
+              "id": "a6991a34-92ce-4f88-959b-0074600ecdb1",
+              "name": "temperatura_c",
+              "value": "={{ $json.body.temperatura_c }}",
+              "type": "number"
+            },
+            {
+              "id": "2b6615d8-184c-4fb2-beea-f1483801bd1e",
+              "name": "humedad_pct",
+              "value": "={{ $json.body.humedad_pct ?? null }}",
+              "type": "number"
+            },
+            {
+              "id": "a9fb15f0-3b95-4d00-b6c4-18c834061f12",
+              "name": "presion_hpa",
+              "value": "={{ $json.body.presion_hpa ?? null }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "40afe642-1192-44f2-b50c-ae26c3c623d4",
+      "name": "Lectura"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0c1f5a52-3d6e-4f0b-9a52-1e7a2b9c4d10",
+              "leftValue": "={{ $json.temperatura_c }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "aa8188c4-ebe8-4c98-ba28-177b140bc8ed",
+              "leftValue": "={{ $json.temperatura_c }}",
+              "rightValue": -20,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "6ee552d4-4d9d-4695-85dc-d26715f79a1f",
+              "leftValue": "={{ $json.temperatura_c }}",
+              "rightValue": 60,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            },
+            {
+              "id": "76aa412b-bd68-4e39-be6b-baf0ab4f0ba9",
+              "leftValue": "={{ $json.humedad_pct === null || ($json.humedad_pct >= 0 && $json.humedad_pct <= 100) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "52b7eff5-7fc5-49b0-a8fa-08751f3291d6",
+              "leftValue": "={{ $json.presion_hpa === null || ($json.presion_hpa >= 500 && $json.presion_hpa <= 1100) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "948e7070-dec3-4f82-bdcf-450fb6ee89ea",
+      "name": "¿Lectura válida?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Lectura interior del dispositivo {{ $json.dispositivo }}:\n{{ JSON.stringify({ ciudad: $json.ciudad, temperatura_c: $json.temperatura_c, humedad_pct: $json.humedad_pct, presion_hpa: $json.presion_hpa }) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Eres el asesor de ambiente de un salon de clase. Un dispositivo fisico\n(StickS3 con un sensor Grove) mide el aire INTERIOR y te envia la lectura\npor USB a traves de un puente en el computador.\nTu trabajo: compararla con el clima EXTERIOR y dar UNA recomendacion breve\nque la persona vera en una pantalla de 1,14 pulgadas.\n\n=========================================================\nHERRAMIENTA\n=========================================================\n  - clima_exterior: devuelve el clima actual de una ciudad\n    (temperatura_actual_c, temperatura_max_c, prob_lluvia_pct, viento_kmh, mensaje).\n  - Llamala SIEMPRE una sola vez, con la ciudad que llega en la lectura.\n  - Si la herramienta falla, decide solo con la lectura interior y dilo en \"detalle\".\n\n=========================================================\nCRITERIOS (rangos de confort interior)\n=========================================================\n  - Temperatura: confort 20 a 26 C. Fuera de 18 a 28 C es incomodo.\n  - Humedad: confort 40 a 60 %. Menos de 30 % o mas de 70 % es incomodo.\n  - Presion: solo como contexto; no la uses para decidir el nivel.\n  - Si humedad_pct o presion_hpa llegan en null, el sensor solo mide\n    temperatura: decide con la temperatura y no inventes la humedad.\n\n  nivel:\n    \"ok\"       -> temperatura y humedad (si llega) en confort.\n    \"atencion\" -> alguna variable fuera de confort, pero dentro de 18-28 C y 30-70 %.\n    \"alerta\"   -> temperatura fuera de 18-28 C o humedad fuera de 30-70 %.\n\n  Recomendaciones posibles (elige la mas util comparando interior y exterior):\n    - Abrir ventanas: si adentro hace mas calor o mas humedad que afuera y no llueve.\n    - Cerrar ventanas: si afuera llueve o afuera esta mas frio que el confort.\n    - Ventilador / aire acondicionado: si adentro hace calor y afuera tambien.\n    - Abrigo / calefaccion: si adentro hace frio.\n    - Mantener: si todo esta en confort.\n\n=========================================================\nREGLAS DEL CAMPO \"pantalla\" (la pantalla es muy pequena)\n=========================================================\n  - Maximo 60 caracteres, incluidos los espacios.\n  - Espanol, sin tildes ni enie (la fuente del dispositivo no las muestra),\n    sin emojis y sin saltos de linea.\n  - Empieza con la accion en imperativo. Ejemplo: \"Abre ventanas: afuera 21C, adentro 27C\".\n\n=========================================================\nENTREGA DE LA RESPUESTA FINAL (OBLIGATORIO):\n  - Entrega la respuesta final UNA sola vez, llamando a la herramienta\n    format_final_json_response.\n  - Los argumentos de esa herramienta van SIEMPRE dentro de la clave \"output\":\n      { \"output\": { \"pantalla\": \"...\", \"nivel\": \"...\", \"detalle\": \"...\" } }\n  - No escribas el JSON como texto libre.\n\nFORMATO DE SALIDA (OBLIGATORIO):\n=========================================================\n  {\n    \"pantalla\": \"<recomendacion de maximo 60 caracteres>\",\n    \"nivel\":    \"ok\" | \"atencion\" | \"alerta\",\n    \"detalle\":  \"<2 o 3 frases: interior vs exterior y por que se recomienda>\"\n  }"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        700,
+        -120
+      ],
+      "id": "d9f901fd-4002-49ae-8441-46c901f36cb0",
+      "name": "Asesor de ambiente",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        600,
+        120
+      ],
+      "id": "f5c6ca7a-683b-4162-90f4-23015befa2ca",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta el clima EXTERIOR actual de una ciudad (servicio /clima de la Practica 0). Devuelve temperatura_actual_c, temperatura_max_c, prob_lluvia_pct, viento_kmh y mensaje.",
+        "url": "http://localhost:5678/webhook/clima",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ciudad",
+              "value": "={{ $fromAI('ciudad', 'Nombre de la ciudad, tal como llega en la lectura', 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        120
+      ],
+      "id": "b050f69a-a3f8-453f-b14d-3bb864b412aa",
+      "name": "clima_exterior"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"pantalla\": {\n      \"type\": \"string\",\n      \"maxLength\": 60\n    },\n    \"nivel\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"ok\",\n        \"atencion\",\n        \"alerta\"\n      ]\n    },\n    \"detalle\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"pantalla\",\n    \"nivel\",\n    \"detalle\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        920,
+        120
+      ],
+      "id": "ccf17ac7-94a8-4075-ae1a-8cf4f25270b3",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1060,
+        -120
+      ],
+      "id": "5264af6c-7851-4b01-8a22-635441ff0abf",
+      "name": "Responder recomendación"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Lectura invalida\", \"recibido\": $('Webhook POST /ambiente').first().json.body } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        240
+      ],
+      "id": "f20855d0-1560-4a6e-9f3e-c584ff775d27",
+      "name": "Responder 400"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook POST /ambiente": {
+      "main": [
+        [
+          {
+            "node": "Lectura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lectura": {
+      "main": [
+        [
+          {
+            "node": "¿Lectura válida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Lectura válida?": {
+      "main": [
+        [
+          {
+            "node": "Asesor de ambiente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Asesor de ambiente": {
+      "main": [
+        [
+          {
+            "node": "Responder recomendación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Asesor de ambiente",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clima_exterior": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asesor de ambiente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Asesor de ambiente",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

@@ -1,6 +1,6 @@
 # Modalidades gratuita (Groq) y de pago (DeepSeek)
 
-Las prácticas con inteligencia artificial (P1 y P2) incluyen **dos plantillas** con los mismos *prompts* y la misma lógica. Solo difieren en los nodos de modelo.
+Las prácticas con inteligencia artificial (P1, P2 y P3) incluyen **dos plantillas** con los mismos *prompts* y la misma lógica. Solo difieren en los nodos de modelo.
 
 | | Gratuita: `workflow-groq-free.json` | De pago: `workflow-deepseek.json` |
 |---|---|---|

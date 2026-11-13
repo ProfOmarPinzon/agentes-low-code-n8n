@@ -286,6 +286,8 @@ Se abre una **conversación nueva** para cada cliente (recargando la Chat URL).
 3. ¿Cómo se mediría el desempeño del sistema en producción? No basta con que el cliente permanezca: es necesario saber si permaneció **gracias a la oferta**.
 4. ¿Qué riesgos de sesgo podría presentar el modelo de churn?
 
+**Nota:** la [Práctica 3](04-practica-3-agente-gadget.md), opcional, lleva un agente fuera de la pantalla: un dispositivo con un sensor envía sus lecturas y el agente usa como herramienta el servicio de clima de la P0.
+
 ---
 
 ## Apéndice: despliegue de un servicio propio en Render

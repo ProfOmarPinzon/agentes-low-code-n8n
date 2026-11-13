@@ -5,7 +5,7 @@ Prompts, tools MCP, parsers, conexiones y Retry On Fail quedan idénticos,
 así la plantilla gratis sigue siendo la única fuente de verdad.
 
 Uso (desde la raíz del repo):
-    uv run scripts/make_deepseek.py                 # regenera P1 y P2
+    uv run scripts/make_deepseek.py                 # regenera P1, P2 y P3
     uv run scripts/make_deepseek.py --model deepseek-v4-pro
 """
 import argparse
@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 TARGETS = [
     ROOT / "demo-basic" / "workflow",
     ROOT / "demo-advanced" / "workflow",
+    ROOT / "demo-gadget" / "workflow",
 ]
 GROQ_TYPE = "@n8n/n8n-nodes-langchain.lmChatGroq"
 DEEPSEEK_TYPE = "@n8n/n8n-nodes-langchain.lmChatDeepSeek"
